@@ -32,6 +32,20 @@ function inversionString (id){
 	    where p.id = ${id}
     )t	
 `}
+
+function propuestaString (id){
+    return  `
+    SELECT array_to_json(array_agg(row_to_json(t)))
+    from(
+	    select * from propuesta 
+	    where id = ${id}
+    )t	
+`}
+
+function firstviewString (id){
+    return  `
+        SELECT firstview(${id})	
+`}
 /**************** */
 class DB{
     constructor(){
@@ -54,5 +68,15 @@ class DB{
     getInversions(id){
         return this.pgClient.query(inversionString(id));
     }
+    //retorna promesa con json de propuesta
+    getPropuestas(id){
+        return this.pgClient.query(propuestaString(id));
+    }
+
+    //setea la primera vez que se ve el asunto
+    setFirstview(id){
+        return this.pgClient.query(firstviewString(id));
+    }
+
 }
 module.exports = DB;

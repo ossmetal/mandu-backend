@@ -29,6 +29,8 @@ DROP TABLE public.propuesta;
 DROP TABLE public.inversion;
 DROP TABLE public.imgs;
 DROP TABLE public.casos_exito;
+DROP FUNCTION public.firstview(integer);
+DROP FUNCTION public.check_day();
 DROP EXTENSION plpgsql;
 DROP SCHEMA public;
 --
@@ -60,6 +62,57 @@ CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
 
 COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
 
+
+--
+-- Name: check_day(); Type: FUNCTION; Schema: public; Owner: businesspropadmin
+--
+
+CREATE FUNCTION public.check_day() RETURNS character varying
+    LANGUAGE plpgsql
+    AS $$
+DECLARE 
+	passed varchar;
+	temprow record;
+BEGIN
+       
+	FOR temprow IN
+		SELECT id, valid_days from propuesta where isview='Y' AND isactive='Y'
+	LOOP
+		IF (temprow.valid_days-1) > 0 THEN
+			UPDATE public.propuesta SET  valid_days=(temprow.valid_days-1) WHERE id=temprow.id;
+		END IF;
+		IF (temprow.valid_days-1) = 0 THEN
+			UPDATE public.propuesta
+			SET  valid_days=0, isactive='N'
+			WHERE id=temprow.id;
+		END IF;	
+	END LOOP;
+	
+        RETURN 'EJECUTADO DIARIAMENTE ACTUALIZANDO LAS PROPUESTAS';
+END;
+$$;
+
+
+ALTER FUNCTION public.check_day() OWNER TO businesspropadmin;
+
+--
+-- Name: firstview(integer); Type: FUNCTION; Schema: public; Owner: businesspropadmin
+--
+
+CREATE FUNCTION public.firstview(integer) RETURNS character varying
+    LANGUAGE plpgsql
+    AS $_$
+
+BEGIN
+	UPDATE public.propuesta
+	SET  isview = 'Y'
+	WHERE id=$1;
+    RETURN 'Activada propuesta quedan';
+END;
+$_$;
+
+
+ALTER FUNCTION public.firstview(integer) OWNER TO businesspropadmin;
 
 SET default_tablespace = '';
 
@@ -113,7 +166,9 @@ CREATE TABLE public.propuesta (
     created timestamp without time zone DEFAULT now() NOT NULL,
     isactive character(1) DEFAULT 'Y'::bpchar NOT NULL,
     valid_to date,
-    uri character varying(32)
+    uri character varying(32),
+    isview character(1) DEFAULT 'N'::bpchar,
+    valid_days integer
 );
 
 
@@ -194,6 +249,11 @@ ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_
 --
 
 COPY public.casos_exito (name, parent, prop_id) FROM stdin;
+ejemplo	tipo	1
+ejemplo2	tipo	1
+ejemplo	tipo2	1
+ejemplo4	tipo3	1
+ejemplo5	tipo3	1
 \.
 
 
@@ -219,8 +279,8 @@ mensual	10000	1
 -- Data for Name: propuesta; Type: TABLE DATA; Schema: public; Owner: businesspropadmin
 --
 
-COPY public.propuesta (id, created_by, created, isactive, valid_to, uri) FROM stdin;
-1	1	2018-08-11 23:33:19.640699	Y	\N	randohash!
+COPY public.propuesta (id, created_by, created, isactive, valid_to, uri, isview, valid_days) FROM stdin;
+1	1	2018-08-11 23:33:19.640699	Y	\N	randohash!	Y	4
 \.
 
 
