@@ -1,0 +1,11 @@
+#casos{
+   /* float: right;
+    position: absolute;
+    */
+    border-radius: 10px;
+    width: 132px;
+    height: 38;
+}
+#slides{
+    padding: 0px !important;
+}

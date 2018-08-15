@@ -1,0 +1,10 @@
+{ "express" : { "port" : 2000 },
+ "postgres":
+ {
+   "db" : "mandubusinessprop",
+   "user" : "businesspropadmin",
+    "password" :"123456",
+    "host" : "localhost",
+    "port" : 5432
+ }
+}
